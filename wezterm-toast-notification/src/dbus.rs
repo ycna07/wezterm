@@ -109,7 +109,7 @@ async fn show_notif_impl(notif: ToastNotification) -> Result<(), Box<dyn std::er
             "org.wezfurlong.wezterm",
             &notif.title,
             &notif.message,
-            if notif.url.is_some() {
+            if notif.url.is_some() || notif.on_click.is_some() {
                 &["show", "Show"]
             } else {
                 &[]
@@ -129,9 +129,12 @@ async fn show_notif_impl(notif: ToastNotification) -> Result<(), Box<dyn std::er
                 if args.nid == notification {
                     if let Some(url) = notif.url.as_ref() {
                         wezterm_open_url::open_url(url);
-                        abort_closed.abort();
-                        break;
                     }
+                    if let Some(callback) = notif.on_click {
+                        callback();
+                    }
+                    abort_closed.abort();
+                    break;
                 }
             }
             Ok::<(), zbus::Error>(())
